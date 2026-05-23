@@ -1,0 +1,121 @@
+from datetime import datetime
+import json
+from os import name, system, path
+from time import sleep
+
+class Expense:
+    exp_data = []
+    def __init__(self,date : datetime,category : str,description : str,amount : float):
+        self.date = str(date)
+        self.category = category
+        self.description = description
+        self.amount = amount
+
+    def __str__(self):
+        return f"{self.date} | {self.category} | {self.description} | ₹{self.amount}" 
+
+    def add_exp(self):
+        Expense.exp_data.append(self)
+
+    def view_exps():
+        for i, expense in enumerate(Expense.exp_data):
+            print(i,". ", expense)
+        print("------------------------------------------------")
+        total = sum(expense.amount for expense in Expense.exp_data)
+        print(f"Total Expenses: ₹{total}")
+    
+    def remove_exp(index):
+        for i, expense in enumerate(Expense.exp_data):
+            if i == index:
+                del Expense.exp_data[i]
+                break
+
+if (path.exists("expenses.json")):
+    with open("expenses.json", "r") as f:
+        data = json.load(f)
+        for item in data:
+            expense = Expense(item["date"], item["category"], item["description"], item["amount"])
+            Expense.exp_data.append(expense)
+
+while(1):
+    system("cls" if name == "nt" else "clear")
+    print("1.Add Expense")
+    print("2.View Expenses")
+    print("3.Remove Expense")
+    print("4.Exit")
+
+    try:
+        choice = int(input("Enter your choice: "))
+    except ValueError:
+        print("Invalid input! Please enter a number.")
+        print("------------------------------------------------\n")
+        system("cls" if name == "nt" else "clear")
+        sleep(3)
+        continue
+    
+    if choice == 1:
+        date = input("Enter date (YYYY-MM-DD):")
+
+        try:
+            date = datetime.strptime(date,"%Y-%m-%d").date()
+        except ValueError:
+            print("Invalid date format!")
+            print("------------------------------------------------\n")
+            system("cls" if name == "nt" else "clear")
+            sleep(3)
+            continue
+
+        category = input("Enter category:")
+        description = input("Enter description:")
+
+        try:
+            amount = float(input("Enter amount:"))
+        except ValueError:
+            system("cls" if name == "nt" else "clear")
+            print("Invalid amount format!")
+            print("------------------------------------------------\n")
+            sleep(3)
+            continue
+
+        expense = Expense(date, category, description, amount)
+        expense.add_exp()
+        with open("expenses.json","w") as f:
+            json.dump([expense.__dict__ for expense in Expense.exp_data], f, indent = 4)
+        print("Expense added successfully!")
+
+
+    elif choice == 2:
+        try:
+            Expense.view_exps()
+        except Exception as e:
+            system("cls" if name == "nt" else "clear")
+            print(f"An error occurred: {e}")
+            print("------------------------------------------------\n")
+            sleep(4)
+            continue
+
+    elif choice == 3:
+        index = int(input("Enter the index of the expense to remove: "))
+
+        try:
+            if index < 0 or index >= len(Expense.exp_data):
+                raise IndexError("Index out of range!")
+        except (ValueError, IndexError) as e:
+            system("cls" if name == "nt" else "clear")
+            print(f"Error: {e}")
+            print("------------------------------------------------\n")
+            sleep(4)
+            continue
+
+        Expense.remove_exp(index)
+        with open("expenses.json", "w") as f:
+            json.dump([expense.__dict__ for expense in Expense.exp_data], f, indent = 4)
+        print("Expense removed successfully!")
+
+    elif choice == 4:
+        print("You have exited the program!")
+        system("cls" if name == "nt" else "clear")
+        sleep(2)
+        break
+    print("------------------------------------------------\n")
+    sleep(2)
